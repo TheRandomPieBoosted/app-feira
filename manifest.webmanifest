@@ -1,0 +1,17 @@
+{
+  "name": "Feira · Rede Raízes da Mata",
+  "short_name": "Feira",
+  "description": "Vendas da feira, sem internet. Dados ficam no aparelho.",
+  "lang": "pt-BR",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F4F7F2",
+  "theme_color": "#2F6B38",
+  "icons": [
+    {"src": "icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icone-512-mascara.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

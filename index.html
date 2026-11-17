@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2F6B38">
+<title>Feira · Rede Raízes da Mata</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icone-192.png">
+<link rel="apple-touch-icon" href="icone-192.png">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:#F4F7F2;color:#1C2A1E;font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+#app{min-height:100%;display:flex;flex-direction:column;max-width:560px;margin:0 auto}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.topo{background:#2F6B38;color:#fff;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:0;z-index:5}
+.topo h1{margin:0;font-size:17px;font-weight:700}
+.topo .volta,.topo .olho{min-height:44px;min-width:44px;background:none;border:0;color:#fff;font-weight:600;font-size:15px;padding:0 4px;border-radius:10px}
+.topo .olho{background:#3F7D47}
+.capa{background:#2F6B38;color:#fff;padding:24px 18px 20px}
+.capa small{color:#DCEBDD;font-size:13px;font-weight:500}
+.capa h1{margin:2px 0;font-size:26px;line-height:1.15}
+.capa p{margin:0;color:#DCEBDD;font-size:14px}
+.corpo{padding:14px;display:flex;flex-direction:column;gap:12px;flex:1}
+.cartao{background:#fff;border:1px solid #D5DED3;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.cartao h2{margin:0;font-size:15px;font-weight:600}
+.sub{font-size:13px;color:#4A5A4C}
+.linha{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.num{font-size:24px;font-weight:700}
+.selo{font-size:12px;font-weight:600;color:#2F6B38;background:#E3EFE2;border-radius:999px;padding:4px 10px}
+.selo.alerta{color:#5A4708;background:#FFF0C2}
+.b{min-height:48px;padding:0 14px;border-radius:12px;border:1px solid #9DB89F;background:#fff;font-weight:600;font-size:15px;display:flex;align-items:center;justify-content:center;text-align:center}
+.b.p{background:#2F6B38;border-color:#2F6B38;color:#fff}
+.b.g{min-height:60px;font-size:18px;font-weight:700;border-radius:14px}
+.b.perigo{color:#8A2C1F;border-color:#D9A79F}
+.b:disabled{background:#E6ECE4;border-color:#D5DED3;color:#6B766C}
+.duas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.aviso{background:#FFF6DD;border:1px solid #E5CF8F;border-radius:12px;padding:10px 12px;font-size:13px;color:#5A4708}
+.erro{background:#FBE9E6;border:1px solid #D9A79F;border-radius:12px;padding:10px 12px;font-size:14px;color:#7A2418}
+.ok{background:#E9F1E7;border:1px solid #C3D0C1;border-radius:12px;padding:10px 12px;font-size:14px}
+label.rot{font-size:13px;font-weight:600;color:#4A5A4C}
+input.campo,select.campo,textarea.campo{width:100%;min-height:46px;padding:8px 12px;background:#fff;border:1px solid #9DB89F;border-radius:10px;font-size:16px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{min-height:44px;padding:0 12px;border-radius:10px;border:1px solid #C3D0C1;background:#fff;font-size:14px;font-weight:500}
+.chip.on{background:#2F6B38;border-color:#2F6B38;color:#fff;font-weight:700}
+.chip.novo{border-style:dashed;border-color:#7FA283;color:#2F6B38;background:#F4F7F2;font-weight:600}
+.prods{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.prod{min-height:54px;padding:6px 10px;text-align:left;border-radius:10px;border:1px solid #C3D0C1;background:#fff;font-size:13px;line-height:1.25;font-weight:500}
+.prod b{display:block;font-size:14px}
+.prod.sem{border-style:dashed;color:#4A5A4C}
+.item{display:flex;align-items:center;gap:6px;min-height:54px;border-bottom:1px solid #E6ECE4;padding:4px 0}
+.item:last-child{border-bottom:0}
+.item .nome{flex:1;min-width:0;font-size:14px;font-weight:500}
+.item .q{width:26px;text-align:center;font-weight:700}
+.mm{width:44px;height:44px;border-radius:10px;border:1px solid #C3D0C1;background:#F4F7F2;color:#2F6B38;font-size:20px;font-weight:700}
+.preco{min-width:78px;min-height:44px;text-align:right;background:none;border:0;border-bottom:1px dashed #9DB89F;font-weight:600;font-size:14px;padding:0 2px}
+.rodape{background:#fff;border-top:1px solid #D5DED3;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;bottom:0}
+.formas{display:grid;gap:6px}
+.venda{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:62px;border-bottom:1px solid #E6ECE4;padding:6px 0}
+.venda:last-child{border-bottom:0}
+.venda .quem{font-size:15px;font-weight:600}
+.riscada .quem,.riscada .val{text-decoration:line-through;color:#6B766C}
+.marca{display:flex;align-items:center;gap:10px;min-height:44px;font-size:15px;font-weight:500}
+.marca input{width:22px;height:22px;accent-color:#2F6B38}
+pre.recibo{white-space:pre-wrap;font:13px/1.45 ui-monospace,Menlo,Consolas,monospace;background:#F4F7F2;border-radius:10px;padding:10px;margin:0}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+"use strict";
+/* App da feira – Rede Raízes da Mata. Funciona sem internet; tudo fica guardado neste aparelho.
+   Ida: carrega o "pacote da feira" gerado pelo programa. Volta: exporta um arquivo de lançamento
+   (formato versão 2 do GestaoRede) com os clientes novos e uma venda por venda. */
+const VERSAO = "1.0";
+const CHAVE = "feira-app-v1";
+const FORMAS = ["Dinheiro", "Pix", "Cartão", "Saldo"];
+
+// ---------------------------------------------------------------- estado guardado
+function estadoVazio() {
+  return { pacote: null, vendas: [], novos: [], cfg: { apelido: "", esconder: false, contaDia: "" }, seq: 0, exportadoEm: "" };
+}
+let erroGuardar = "";
+function ler() {
+  try { const t = localStorage.getItem(CHAVE); if (t) return Object.assign(estadoVazio(), JSON.parse(t)); } catch (e) { erroGuardar = "Não consegui ler os dados guardados neste aparelho."; }
+  return estadoVazio();
+}
+function guardar() {
+  try { localStorage.setItem(CHAVE, JSON.stringify(S)); erroGuardar = ""; }
+  catch (e) { erroGuardar = "Não consegui guardar neste aparelho (memória cheia ou navegação privada). Exporte as vendas agora."; }
+}
+let S = ler();
+
+// ---------------------------------------------------------------- estado da tela (não guardado)
+function vendaNova() { return { consumidor: null, itens: [], forma: "Dinheiro", dividir: false, forma2: "", valor2: "", conta: "", conta2: "", entregar: false, obs: "" }; }
+let T = { tela: "inicio", v: vendaNova(), buscaC: "", buscaP: "", todos: false, detalhe: null, msg: "", erro: "", confirmar: "", editarPreco: null, clienteNovo: false, ultima: null };
+
+// ---------------------------------------------------------------- utilidades
+const $ = (s) => document.querySelector(s);
+function esc(t) { return String(t == null ? "" : t).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+function chave(t) { return String(t || "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim(); }
+function r2(v) { return Math.round((Number(v) || 0) * 100) / 100; }
+function brl(v) { const n = r2(v); return (n < 0 ? "−" : "") + "R$ " + Math.abs(n).toFixed(2).replace(".", ",").replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
+function valor(v) { return S.cfg.esconder ? "R$ ••••" : brl(v); }
+function num(t) { const n = parseFloat(String(t).replace(/\./g, "").replace(",", ".")); return isNaN(n) ? 0 : n; }
+function numDigitado(t) { const s = String(t).trim(); const n = parseFloat(s.indexOf(",") >= 0 ? s.replace(/\./g, "").replace(",", ".") : s); return isNaN(n) ? 0 : n; }
+function p2(n) { return String(n).padStart(2, "0"); }
+function hojeISO() { const d = new Date(); return d.getFullYear() + "-" + p2(d.getMonth() + 1) + "-" + p2(d.getDate()); }
+function horaAgora() { const d = new Date(); return p2(d.getHours()) + ":" + p2(d.getMinutes()); }
+function dataBR(iso) { return iso ? iso.slice(8, 10) + "/" + iso.slice(5, 7) + "/" + iso.slice(0, 4) : ""; }
+function qtd(q) { return String(r2(q)).replace(".", ","); }
+
+// ---------------------------------------------------------------- dados do pacote
+function consumidores() {
+  const base = (S.pacote ? S.pacote.consumidores : []).map((c) => Object.assign({ novo: false }, c));
+  const novos = S.novos.map((n) => ({ nome: n.nome, busca: chave(n.nome), saldo: 0, disponivel: 0, frequente: false, compras: [], novo: true, contato: n.contato }));
+  return base.concat(novos);
+}
+function consumidor(nome) { return consumidores().find((c) => c.nome === nome) || null; }
+function produtos() { return S.pacote ? S.pacote.produtos : []; }
+function produto(sku) { return produtos().find((p) => p.sku === sku) || null; }
+function contas() { return S.pacote ? S.pacote.contas : []; }
+function contaDoDia() { return S.cfg.contaDia || (S.pacote && S.pacote.conta_do_dia) || contas()[0] || ""; }
+function contaPadrao(forma) {
+  if (forma === "Saldo" || !forma) return "";
+  const fixa = S.pacote && S.pacote.conta_forma ? S.pacote.conta_forma[forma] : null;
+  return fixa && contas().indexOf(fixa) >= 0 ? fixa : contaDoDia();
+}
+
+// ---------------------------------------------------------------- contas da venda
+function totalItens(itens) { return r2(itens.reduce((s, i) => s + i.quantidade * i.preco, 0)); }
+function partes(v) {
+  const total = v.total != null ? v.total : totalItens(v.itens);
+  if (v.pagamento2) return [{ forma: v.pagamento, conta: v.conta, valor: r2(total - v.valor2) }, { forma: v.pagamento2, conta: v.conta2, valor: r2(v.valor2) }];
+  return [{ forma: v.pagamento, conta: v.conta, valor: total }];
+}
+function parteSaldo(v) { return r2(partes(v).filter((p) => p.forma === "Saldo").reduce((s, p) => s + p.valor, 0)); }
+function pagamentoTexto(v) { const ps = partes(v); return ps.length > 1 ? ps.map((p) => p.forma + " " + brl(p.valor)).join(" + ") : ps[0].forma + (ps[0].conta ? " → " + ps[0].conta : ""); }
+function vendasValidas() { return S.vendas.filter((v) => !v.desfeita); }
+function gastoHoje(nome) { return r2(vendasValidas().filter((v) => v.consumidor === nome).reduce((s, v) => s + parteSaldo(v), 0)); }
+function saldoAgora(c) { return r2(c.saldo - gastoHoje(c.nome)); }
+function quemDe(v) { return v.consumidor || "Venda avulsa"; }
+
+// ---------------------------------------------------------------- ações
+function ir(tela) { T.tela = tela; T.erro = ""; T.confirmar = ""; T.editarPreco = null; T.clienteNovo = false; desenhar(); window.scrollTo(0, 0); }
+
+function carregarPacote(arquivo) {
+  const leitor = new FileReader();
+  leitor.onload = () => {
+    try {
+      const d = JSON.parse(String(leitor.result).replace(/^﻿/, ""));
+      if (!d || d.tipo !== "pacote_feira" || !Array.isArray(d.produtos) || !Array.isArray(d.consumidores)) throw new Error("x");
+      if (d.versao !== 1) { T.erro = "Este pacote é de uma versão que este app não conhece. Atualize o app (abra com internet)."; desenhar(); return; }
+      S.pacote = d;
+      if (!S.cfg.contaDia || d.contas.indexOf(S.cfg.contaDia) < 0) S.cfg.contaDia = d.conta_do_dia || d.contas[0] || "";
+      // clientes novos que já entraram no programa deixam de ser "novos"
+      S.novos = S.novos.filter((n) => !d.consumidores.some((c) => c.busca === chave(n.nome)));
+      guardar();
+      T.msg = "Pacote carregado: " + d.resumo.produtos + " produtos e " + d.resumo.consumidores + " consumidores."; T.erro = "";
+    } catch (e) { T.erro = "Este arquivo não é um pacote da feira. Gere o pacote no programa (Passar a feira a limpo → App do celular)."; }
+    desenhar();
+  };
+  leitor.onerror = () => { T.erro = "Não consegui abrir o arquivo."; desenhar(); };
+  leitor.readAsText(arquivo);
+}
+
+function adicionar(sku) {
+  const p = produto(sku); if (!p) return;
+  const it = T.v.itens.find((i) => i.sku === sku);
+  if (it) it.quantidade = r2(it.quantidade + 1);
+  else T.v.itens.push({ sku: p.sku, nome: p.nome_lista || p.nome, quantidade: 1, preco: r2(p.preco) });
+  T.buscaP = ""; T.erro = "";
+  if (!p.preco) T.editarPreco = sku;
+  desenhar();
+}
+function mudarQtd(sku, d) {
+  const it = T.v.itens.find((i) => i.sku === sku); if (!it) return;
+  it.quantidade = r2(it.quantidade + d);
+  if (it.quantidade <= 0) T.v.itens = T.v.itens.filter((i) => i.sku !== sku);
+  desenhar();
+}
+function escolherConsumidor(nome) {
+  T.v.consumidor = nome; T.buscaC = ""; T.clienteNovo = false; T.erro = "";
+  if (nome && T.v.forma === "Dinheiro" && !T.v.tocouForma) T.v.forma = "Saldo";
+  if (!nome && T.v.forma === "Saldo") T.v.forma = "Dinheiro";
+  desenhar();
+}
+function criarCliente() {
+  const nome = ($("#cn-nome").value || "").replace(/\s+/g, " ").trim();
+  const contato = ($("#cn-tel").value || "").trim();
+  if (!nome) { T.erro = "Digite o nome do cliente."; desenhar(); return; }
+  if (consumidores().some((c) => c.busca === chave(nome))) { T.erro = "Já existe alguém com esse nome. Escolha na busca."; desenhar(); return; }
+  S.novos.push({ nome: nome, contato: contato }); guardar();
+  escolherConsumidor(nome);
+}
+
+function conferirVenda() {
+  const v = T.v, total = totalItens(v.itens);
+  if (!v.itens.length) return "Escolha pelo menos um produto.";
+  if (v.itens.some((i) => !(i.preco > 0))) return "Há produto sem preço: toque no preço para digitar.";
+  if (total <= 0) return "O total precisa ser maior que zero.";
+  const usaSaldo = v.forma === "Saldo" || (v.dividir && v.forma2 === "Saldo");
+  if (usaSaldo && !v.consumidor) return "Para pagar com saldo, escolha quem compra.";
+  if (v.dividir) {
+    if (!v.forma2 || v.forma2 === v.forma) return "Escolha a segunda forma, diferente da primeira.";
+    const v2 = numDigitado(v.valor2);
+    if (!(v2 > 0)) return "Digite quanto foi na segunda forma.";
+    if (v2 >= total) return "A segunda forma precisa ser menor que o total.";
+  }
+  return "";
+}
+function finalizar() {
+  const erro = conferirVenda();
+  if (erro) { T.erro = erro; desenhar(); return; }
+  if (!S.cfg.apelido) { T.erro = "Dê um apelido a este celular na tela Início antes de vender."; desenhar(); return; }
+  const v = T.v, hoje = hojeISO();
+  S.seq += 1;
+  const reg = {
+    codigo: S.cfg.apelido + "-" + hoje.replace(/-/g, "") + "-" + String(S.seq).padStart(3, "0"),
+    data: hoje, hora: horaAgora(), consumidor: v.consumidor || null,
+    itens: v.itens.map((i) => ({ sku: i.sku, nome: i.nome, quantidade: i.quantidade, preco: r2(i.preco) })),
+    total: totalItens(v.itens), pagamento: v.forma, conta: v.forma === "Saldo" ? "" : (v.conta || contaPadrao(v.forma)),
+    pagamento2: v.dividir ? v.forma2 : "", valor2: v.dividir ? r2(numDigitado(v.valor2)) : 0,
+    conta2: v.dividir && v.forma2 !== "Saldo" ? (v.conta2 || contaPadrao(v.forma2)) : "",
+    entregar_depois: !!v.entregar, obs: (v.obs || "").trim(), desfeita: false
+  };
+  S.vendas.push(reg); S.exportadoEm = ""; guardar();
+  T.v = vendaNova(); T.ultima = reg.codigo; T.msg = "Venda registrada: " + quemDe(reg) + " · " + brl(reg.total) + ".";
+  T.detalhe = reg.codigo; ir("detalhe");
+}
+
+function recibo(v) {
+  const l = ["Rede Raízes da Mata · " + dataBR(v.data)];
+  if (v.consumidor) l.push("Para: " + v.consumidor);
+  l.push("");
+  v.itens.forEach((i) => l.push(qtd(i.quantidade) + " × " + i.nome + "  " + brl(i.quantidade * i.preco)));
+  const ps = partes(v);
+  l.push("Total: " + brl(v.total) + " (" + (ps.length > 1 ? ps.map((p) => p.forma + " " + brl(p.valor)).join(" + ") : ps[0].forma) + ")");
+  if (v.entregar_depois) l.push("Encomenda: entregamos em breve.");
+  const c = v.consumidor ? consumidor(v.consumidor) : null;
+  if (c && parteSaldo(v) > 0) l.push("Seu saldo: " + brl(saldoAgora(c)));
+  return l.join("\n");
+}
+function copiar(texto) {
+  const fim = (ok) => { T.msg = ok ? "Recibo copiado. Cole no WhatsApp." : "Não consegui copiar: segure o dedo no recibo e copie."; desenhar(); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texto).then(() => fim(true), () => fim(false));
+  else { const a = document.createElement("textarea"); a.value = texto; document.body.appendChild(a); a.select(); let ok = false; try { ok = document.execCommand("copy"); } catch (e) {} a.remove(); fim(ok); }
+}
+
+function arquivoDeVolta() {
+  const agora = new Date(), carimbo = hojeISO().replace(/-/g, "") + "-" + p2(agora.getHours()) + p2(agora.getMinutes()) + p2(agora.getSeconds());
+  const validas = vendasValidas();
+  const usados = new Set(validas.map((v) => v.consumidor).filter(Boolean));
+  const ops = [];
+  S.novos.filter((n) => usados.has(n.nome)).forEach((n) => ops.push({ tipo: "consumidor", nome: n.nome, contato: n.contato || "" }));
+  validas.forEach((v) => {
+    const op = { tipo: "venda", origem: "app", codigo: v.codigo, data: v.data, canal: "Feira", pagamento: v.pagamento,
+      itens: v.itens.map((i) => ({ sku: i.sku, quantidade: i.quantidade, preco: i.preco })) };
+    if (v.consumidor) op.consumidor = v.consumidor;
+    if (v.conta) op.conta = v.conta;
+    if (v.pagamento2) { op.pagamento2 = v.pagamento2; op.valor2 = v.valor2; if (v.conta2) op.conta2 = v.conta2; }
+    if (v.entregar_depois) op.entregar_depois = true;
+    op.obs = (v.obs ? v.obs + " · " : "") + "app " + S.cfg.apelido + " " + v.hora;
+    ops.push(op);
+  });
+  const dados = { versao: 2, codigo: "APP-" + S.cfg.apelido + "-" + carimbo, origem: "app",
+    descricao: "Feira de " + dataBR(hojeISO()) + " · celular " + S.cfg.apelido + " · " + validas.length + " venda(s)", operacoes: ops };
+  return { nome: "feira-" + S.cfg.apelido + "-" + carimbo, texto: JSON.stringify(dados, null, 1), vendas: validas.length };
+}
+function baixar(nome, texto) {
+  const url = URL.createObjectURL(new Blob([texto], { type: "application/json" }));
+  const a = document.createElement("a"); a.href = url; a.download = nome; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+function marcarExportado(como) { S.exportadoEm = horaAgora(); guardar(); T.msg = como; desenhar(); }
+function exportar(modo) {
+  const arq = arquivoDeVolta();
+  if (!arq.vendas) { T.erro = "Ainda não há vendas para exportar."; desenhar(); return; }
+  if (modo === "compartilhar") {
+    let f = null;
+    try { f = new File([arq.texto], arq.nome + ".txt", { type: "text/plain" }); } catch (e) {}
+    if (f && navigator.canShare && navigator.canShare({ files: [f] })) {
+      navigator.share({ files: [f], title: "Feira " + S.cfg.apelido }).then(
+        () => marcarExportado("Arquivo enviado. No computador: Passar a feira a limpo → App do celular → Receber."),
+        (e) => { if (e && e.name !== "AbortError") { baixar(arq.nome + ".json", arq.texto); marcarExportado("Não deu para compartilhar: o arquivo foi salvo na pasta Downloads. Anexe-o no WhatsApp."); } });
+      return;
+    }
+    baixar(arq.nome + ".json", arq.texto);
+    marcarExportado("Este navegador não compartilha arquivos: salvei em Downloads (" + arq.nome + ".json). Anexe-o no WhatsApp.");
+    return;
+  }
+  baixar(arq.nome + ".json", arq.texto);
+  marcarExportado("Cópia salva na pasta Downloads: " + arq.nome + ".json");
+}
+function novaFeira() {
+  S.vendas = []; S.seq = 0; S.exportadoEm = ""; guardar();
+  T.v = vendaNova(); T.msg = "Pronto: este celular está zerado para a próxima feira."; ir("inicio");
+}
+
+// ---------------------------------------------------------------- telas
+function topo(titulo, volta, voltaTxt, olho) {
+  return '<div class="topo"><button class="volta" data-a="ir" data-v="' + volta + '">‹ ' + esc(voltaTxt) + '</button><h1>' + esc(titulo) + '</h1>' +
+    (olho ? '<button class="olho" data-a="olho" aria-label="' + (S.cfg.esconder ? "Mostrar valores" : "Esconder valores") + '">' + (S.cfg.esconder ? "ver" : "ocultar") + '</button>' : '<span style="width:44px"></span>') + '</div>';
+}
+function avisos() {
+  return (erroGuardar ? '<div class="erro">' + esc(erroGuardar) + '</div>' : "") + (T.erro ? '<div class="erro" role="alert">' + esc(T.erro) + '</div>' : "") + (T.msg ? '<div class="ok" role="status">' + esc(T.msg) + '</div>' : "");
+}
+
+function telaInicio() {
+  const p = S.pacote, validas = vendasValidas(), total = r2(validas.reduce((s, v) => s + v.total, 0));
+  let h = '<div class="capa"><small>Rede Raízes da Mata</small><h1>Feira</h1><p>' + dataBR(hojeISO()) + '</p></div><div class="corpo">' + avisos();
+  h += '<div class="cartao"><div class="linha"><h2>' + (p ? "Pacote carregado" : "Nenhum pacote carregado") + '</h2>' + (p ? '<span class="selo' + (p.gerado_em.slice(0, 10) === hojeISO() ? '">de hoje' : ' alerta">de ' + dataBR(p.gerado_em.slice(0, 10))) + '</span>' : "") + '</div>';
+  h += p ? '<div class="sub">Gerado em ' + dataBR(p.gerado_em.slice(0, 10)) + " às " + p.gerado_em.slice(11, 16) + "<br>" + p.resumo.produtos + " produtos (" + p.resumo.com_estoque + " com estoque) · " + p.resumo.consumidores + " consumidores</div>"
+         : '<div class="sub">No computador: Passar a feira a limpo → App do celular → Gerar pacote da feira. Mande o arquivo para este celular e carregue aqui.</div>';
+  h += '<label class="b" style="align-self:flex-start">' + (p ? "Carregar outro pacote" : "Carregar pacote") + '<input type="file" id="arq" accept=".json,.txt,application/json,text/plain" style="position:absolute;opacity:0;width:1px;height:1px"></label></div>';
+  h += '<div class="cartao"><h2>Este celular</h2><label class="rot" for="apelido">Apelido (entra no código das vendas)</label><input class="campo" id="apelido" maxlength="8" placeholder="A34" value="' + esc(S.cfg.apelido) + '">';
+  if (p) h += '<label class="rot" for="contadia">Conta do dia (Pix e cartão)</label><select class="campo" id="contadia">' + contas().map((c) => '<option' + (c === contaDoDia() ? " selected" : "") + '>' + esc(c) + '</option>').join("") + '</select>';
+  h += '</div>';
+  h += '<div class="cartao"><h2>Hoje neste celular</h2><div class="duas"><div><div class="sub">Vendas</div><div class="num">' + validas.length + '</div></div><div><div class="sub">Total</div><div class="num">' + brl(total) + '</div></div></div>' +
+       (validas.length ? '<div class="sub">' + (S.exportadoEm ? "Exportado às " + S.exportadoEm + "." : "Ainda não exportado.") + '</div>' : "") + '</div>';
+  h += '<button class="b p g" data-a="ir" data-v="vender"' + (p ? "" : " disabled") + '>Nova venda</button>';
+  h += '<div class="duas"><button class="b" data-a="ir" data-v="vendas">Vendas da feira</button><button class="b" data-a="ir" data-v="vendas">Exportar</button></div>';
+  h += '<div class="aviso">Tudo fica guardado neste celular a cada venda, mesmo sem internet. No fim da feira, exporte e mande o arquivo para o programa.</div>';
+  h += '<div class="sub" style="text-align:center">App da feira ' + VERSAO + '</div></div>';
+  return h;
+}
+
+function listaConsumidores() {
+  const b = chave(T.buscaC); if (!b) return "";
+  const achou = consumidores().filter((c) => c.busca.indexOf(b) >= 0).slice(0, 8);
+  if (!achou.length) return '<div class="sub">Ninguém com esse nome. Use “+ Cliente novo”.</div>';
+  return '<div class="chips">' + achou.map((c) => '<button class="chip" data-a="cons" data-v="' + esc(c.nome) + '">' + esc(c.nome) + (c.novo ? " (novo)" : "") + '</button>').join("") + '</div>';
+}
+function listaProdutos() {
+  const b = chave(T.buscaP);
+  let lista = produtos();
+  if (!T.todos) lista = lista.filter((p) => p.tem_estoque);
+  if (b) lista = lista.filter((p) => p.busca.indexOf(b) >= 0).slice(0, 12);
+  else lista = lista.filter((p) => p.rapido).concat(lista.filter((p) => !p.rapido)).slice(0, 12);   // os mais vendidos primeiro
+  if (!lista.length) return '<div class="sub">' + (b ? "Nada encontrado" + (T.todos ? "." : " entre os produtos com estoque. Marque “mostrar todos”.") : "Nenhum produto com estoque no pacote. Marque “mostrar todos”.") + '</div>';
+  return '<div class="prods">' + lista.map((p) => '<button class="prod' + (p.tem_estoque ? "" : " sem") + '" data-a="add" data-v="' + esc(p.sku) + '">' + esc(p.nome_lista || p.nome) + '<b>' + (p.preco ? brl(p.preco) : "sem preço") + '</b></button>').join("") + '</div>';
+}
+function telaVender() {
+  const v = T.v, c = v.consumidor ? consumidor(v.consumidor) : null, total = totalItens(v.itens);
+  const freq = consumidores().filter((x) => x.frequente).slice(0, 6);
+  let h = topo("Nova venda", "inicio", "Início", true) + '<div class="corpo">' + avisos();
+  h += '<label class="rot" for="bc">Quem compra</label><input class="campo" id="bc" autocomplete="off" placeholder="Buscar pelo nome" value="' + esc(T.buscaC) + '"><div id="lc">' + listaConsumidores() + '</div>';
+  h += '<div class="chips">' + (c ? '<button class="chip on" data-a="cons" data-v="' + esc(c.nome) + '">' + esc(c.nome) + '</button>' : "") +
+       freq.filter((x) => !c || x.nome !== c.nome).map((x) => '<button class="chip" data-a="cons" data-v="' + esc(x.nome) + '">' + esc(x.nome) + '</button>').join("") +
+       '<button class="chip' + (c ? "" : " on") + '" data-a="cons" data-v="">Venda avulsa</button><button class="chip novo" data-a="cnovo">+ Cliente novo</button></div>';
+  if (T.clienteNovo) h += '<div class="cartao"><h2>Cliente novo</h2><label class="rot" for="cn-nome">Nome</label><input class="campo" id="cn-nome" autocomplete="off"><label class="rot" for="cn-tel">Telefone</label><input class="campo" id="cn-tel" type="tel" inputmode="tel" autocomplete="off"><div class="duas"><button class="b" data-a="cnovo">Cancelar</button><button class="b p" data-a="ccriar">Cadastrar</button></div></div>';
+  if (c) h += '<div class="sub">Saldo <b>' + valor(saldoAgora(c)) + '</b>' + (c.novo ? " · cliente novo" : "") + (gastoHoje(c.nome) ? " · já gastou " + valor(gastoHoje(c.nome)) + " em saldo hoje" : "") + '</div>';
+  h += '<div class="linha"><label class="rot" for="bp">Produtos</label><label class="marca" style="font-size:13px;font-weight:400"><input type="checkbox" id="todos"' + (T.todos ? " checked" : "") + '> mostrar todos</label></div>';
+  h += '<input class="campo" id="bp" autocomplete="off" placeholder="Buscar pelo nome ou código" value="' + esc(T.buscaP) + '"><div id="lp">' + listaProdutos() + '</div>';
+  if (v.itens.length) {
+    h += '<div class="cartao" style="gap:0">' + v.itens.map((i) => '<div class="item"><div class="nome">' + esc(i.nome) + '</div>' +
+      '<button class="mm" data-a="menos" data-v="' + esc(i.sku) + '" aria-label="Tirar um">−</button><div class="q">' + qtd(i.quantidade) + '</div><button class="mm" data-a="mais" data-v="' + esc(i.sku) + '" aria-label="Somar um">+</button>' +
+      (T.editarPreco === i.sku ? '<input class="campo" style="width:92px" id="ep" inputmode="decimal" data-sku="' + esc(i.sku) + '" value="' + (i.preco ? String(i.preco).replace(".", ",") : "") + '" aria-label="Preço de cada um">'
+        : '<button class="preco" data-a="preco" data-v="' + esc(i.sku) + '" aria-label="Mudar o preço">' + brl(i.quantidade * i.preco) + '</button>') + '</div>').join("") +
+      '</div><div class="sub">Toque no valor para mudar o preço de cada um.</div>';
+  }
+  h += '</div><div class="rodape"><div><div class="sub">Total · ' + v.itens.length + ' produto(s)</div><div class="num">' + brl(total) + '</div></div><button class="b p g" data-a="pagar"' + (v.itens.length ? "" : " disabled") + '>Pagamento ›</button></div>';
+  return h;
+}
+
+function botoesForma(atual, acao, fora) {
+  const fs = FORMAS.filter((f) => f !== fora);
+  return '<div class="formas" style="grid-template-columns:repeat(' + fs.length + ',minmax(0,1fr))">' + fs.map((f) => '<button class="chip' + (f === atual ? " on" : "") + '" style="padding:0 4px" data-a="' + acao + '" data-v="' + f + '">' + f + '</button>').join("") + '</div>';
+}
+function seletorConta(id, forma, atual) {
+  if (!forma || forma === "Saldo") return "";
+  const sel = atual || contaPadrao(forma);
+  return '<label class="rot" for="' + id + '">' + forma + ' entra na conta</label><select class="campo" id="' + id + '">' + contas().map((c) => '<option' + (c === sel ? " selected" : "") + '>' + esc(c) + '</option>').join("") + '</select>';
+}
+function telaPagamento() {
+  const v = T.v, c = v.consumidor ? consumidor(v.consumidor) : null, total = totalItens(v.itens);
+  let h = topo("Pagamento", "vender", "Produtos", false) + '<div class="corpo">' + avisos();
+  h += '<div class="cartao"><div class="linha"><div><h2>' + esc(v.consumidor || "Venda avulsa") + '</h2><div class="sub">' + v.itens.length + ' produto(s)' + (c ? " · saldo " + valor(saldoAgora(c)) : "") + '</div></div><div class="num">' + brl(total) + '</div></div></div>';
+  h += '<label class="rot">Forma</label>' + botoesForma(v.forma, "forma", "") + seletorConta("conta1", v.forma, v.conta);
+  h += '<label class="marca"><input type="checkbox" id="dividir"' + (v.dividir ? " checked" : "") + '> Dividir pagamento em duas formas</label>';
+  let fica = "";
+  if (v.dividir) {
+    const v2 = numDigitado(v.valor2);
+    h += '<div class="cartao"><label class="rot">Segunda forma</label>' + botoesForma(v.forma2, "forma2", v.forma) +
+      '<label class="rot" for="valor2">Quanto na segunda forma (R$)</label><input class="campo" style="width:150px" id="valor2" inputmode="decimal" value="' + esc(v.valor2) + '">' + seletorConta("conta2", v.forma2, v.conta2) + '</div>';
+    h += '<div id="resumo">' + resumoDivisao() + '</div>';
+  }
+  h += '<div id="fiado">' + avisoSaldo() + '</div>';
+  h += '<label class="marca"><input type="checkbox" id="entregar"' + (v.entregar ? " checked" : "") + '> Entregar depois (encomenda)</label>';
+  h += '<label class="rot" for="obs">Observação</label><input class="campo" id="obs" autocomplete="off" value="' + esc(v.obs) + '">';
+  h += '</div><div class="rodape"><button class="b p g" style="flex:1" data-a="fim">Finalizar venda</button></div>';
+  return h;
+}
+function resumoDivisao() {
+  const v = T.v, total = totalItens(v.itens), v2 = numDigitado(v.valor2);
+  if (!v.forma2 || !(v2 > 0) || v2 >= total) return '<div class="sub">Escolha a segunda forma e digite o valor (menor que o total).</div>';
+  return '<div class="ok"><div class="linha"><span>' + v.forma + '</span><b>' + brl(total - v2) + '</b></div><div class="linha"><span>' + v.forma2 + '</span><b>' + brl(v2) + '</b></div></div>';
+}
+function avisoSaldo() {
+  const v = T.v, c = v.consumidor ? consumidor(v.consumidor) : null, total = totalItens(v.itens), v2 = v.dividir ? numDigitado(v.valor2) : 0;
+  const emSaldo = v.forma === "Saldo" ? r2(total - v2) : (v.dividir && v.forma2 === "Saldo" ? r2(v2) : 0);
+  if (!(v.forma === "Saldo" || (v.dividir && v.forma2 === "Saldo"))) return "";
+  if (!c) return '<div class="aviso">Para pagar com saldo, volte e escolha quem compra.</div>';
+  const fica = r2(saldoAgora(c) - emSaldo);
+  return fica < 0 ? '<div class="aviso">Fica com saldo de ' + valor(fica) + '. É fiado: a venda é gravada mesmo assim.</div>' : '<div class="sub">Depois da compra: saldo ' + valor(fica) + '.</div>';
+}
+
+function telaVendas() {
+  const validas = vendasValidas(), total = r2(validas.reduce((s, v) => s + v.total, 0)), porForma = {};
+  validas.forEach((v) => partes(v).forEach((p) => { porForma[p.forma] = r2((porForma[p.forma] || 0) + p.valor); }));
+  let h = topo("Vendas da feira", "inicio", "Início", false) + '<div class="corpo">' + avisos();
+  h += '<div class="cartao"><div class="linha"><span class="sub">' + validas.length + ' venda(s)</span><span class="num">' + brl(total) + '</span></div><div class="duas" style="gap:4px 16px">' +
+       FORMAS.map((f) => '<div class="linha" style="font-size:14px"><span class="sub">' + f + '</span><b>' + brl(porForma[f] || 0) + '</b></div>').join("") + '</div></div>';
+  if (!S.vendas.length) h += '<div class="sub">Nenhuma venda ainda.</div>';
+  else h += '<div class="cartao" style="gap:0">' + S.vendas.slice().reverse().map((v) => '<div class="venda' + (v.desfeita ? " riscada" : "") + '"><div style="min-width:0"><div class="quem">' + esc(quemDe(v)) + '</div><div class="sub">' + v.hora + " · " + (v.desfeita ? "desfeita (não vai para o programa)" : esc(pagamentoTexto(v))) + '</div></div><div class="linha"><b class="val">' + brl(v.total) + '</b><button class="b" style="min-height:44px;padding:0 10px;font-size:13px" data-a="ver" data-v="' + esc(v.codigo) + '">Ver ›</button></div></div>').join("") + '</div>';
+  h += '<button class="b p g" data-a="exp" data-v="compartilhar"' + (validas.length ? "" : " disabled") + '>Exportar e mandar para o programa</button>';
+  h += '<button class="b" data-a="exp" data-v="baixar"' + (validas.length ? "" : " disabled") + '>Salvar uma cópia neste celular</button>';
+  h += '<div class="sub" style="text-align:center">' + (S.exportadoEm ? "Exportado às " + S.exportadoEm + ". " : "") + 'Pode exportar mais de uma vez: o programa não repete venda.</div>';
+  if (S.vendas.length) {
+    h += T.confirmar === "zerar"
+      ? '<div class="cartao"><div><b>Apagar todas as vendas deste celular?</b></div><div class="sub">' + (S.exportadoEm ? "Faça isso só depois de aplicar o arquivo no programa." : "Atenção: as vendas ainda NÃO foram exportadas e serão perdidas.") + '</div><div class="duas"><button class="b" data-a="conf" data-v="">Cancelar</button><button class="b perigo" data-a="zerar">Apagar e começar nova feira</button></div></div>'
+      : '<button class="b perigo" data-a="conf" data-v="zerar">Começar nova feira…</button>';
+  }
+  h += '</div>';
+  return h;
+}
+
+function telaDetalhe() {
+  const v = S.vendas.find((x) => x.codigo === T.detalhe);
+  if (!v) return topo("Venda", "vendas", "Vendas", false) + '<div class="corpo"><div class="sub">Venda não encontrada.</div></div>';
+  const c = v.consumidor ? consumidor(v.consumidor) : null, ps = partes(v);
+  let h = topo("Venda das " + v.hora, "vendas", "Vendas", !!c) + '<div class="corpo">' + avisos();
+  if (v.desfeita) h += '<div class="aviso">Esta venda foi desfeita e não vai para o programa.</div>';
+  h += '<div class="cartao"><div class="linha"><h2 style="font-size:17px">' + esc(quemDe(v)) + '</h2><span class="sub">' + esc(v.codigo) + '</span></div>' +
+    v.itens.map((i) => '<div class="linha" style="font-size:15px"><span>' + qtd(i.quantidade) + " × " + esc(i.nome) + '</span><b>' + brl(i.quantidade * i.preco) + '</b></div>').join("") +
+    '<div class="linha" style="font-size:18px;border-top:1px solid #E6ECE4;padding-top:8px"><b>Total</b><b>' + brl(v.total) + '</b></div>' +
+    ps.map((p) => '<div class="linha sub"><span>' + p.forma + (p.conta ? " → " + esc(p.conta) : "") + '</span><b>' + brl(p.valor) + '</b></div>').join("") +
+    (v.entregar_depois ? '<div class="sub">Encomenda: entregar depois.</div>' : "") + (v.obs ? '<div class="sub">Observação: ' + esc(v.obs) + '</div>' : "") + '</div>';
+  if (c) {
+    const outras = S.vendas.filter((x) => x.consumidor === v.consumidor && x.codigo !== v.codigo && !x.desfeita);
+    h += '<div class="cartao"><h2>' + esc(c.nome) + '</h2><div class="sub">Saldo no pacote ' + valor(c.saldo) + ' · depois das compras de hoje ' + valor(saldoAgora(c)) + '</div>';
+    if (outras.length) h += '<div class="sub"><b>Outras compras nesta feira</b></div>' + outras.map((x) => '<div class="linha" style="font-size:14px"><span>' + x.hora + " · " + esc(x.itens.map((i) => qtd(i.quantidade) + " × " + i.nome).join(", ")) + '</span><b>' + brl(x.total) + '</b></div>').join("");
+    const ant = c.compras || [];
+    h += '<div class="sub"><b>Compras anteriores (últimos 2 meses)</b></div>' + (ant.length ? ant.map((x) => '<div class="linha" style="font-size:14px"><span>' + dataBR(x.data) + " · " + esc(x.itens) + '</span><b>' + valor(x.total) + '</b></div>').join("") : '<div class="sub">Nenhuma no pacote.</div>');
+    h += '</div>';
+  }
+  h += '<pre class="recibo" id="recibo">' + esc(recibo(v)) + '</pre>';
+  h += '<button class="b" data-a="copiar">Copiar recibo para o WhatsApp</button>';
+  if (v.desfeita) h += '<button class="b" data-a="restaurar">Restaurar esta venda</button>';
+  else h += T.confirmar === "desfazer"
+    ? '<div class="cartao"><div><b>Desfazer esta venda?</b></div><div class="sub">Ela fica riscada na lista e não vai para o programa. Dá para restaurar depois.</div><div class="duas"><button class="b" data-a="conf" data-v="">Não</button><button class="b perigo" data-a="desfazer">Sim, desfazer</button></div></div>'
+    : '<button class="b perigo" data-a="conf" data-v="desfazer">Desfazer esta venda…</button>';
+  h += '<button class="b p g" data-a="outra"' + (S.pacote ? "" : " disabled") + '>Nova venda</button></div>';
+  return h;
+}
+
+function desenhar() {
+  const telas = { inicio: telaInicio, vender: telaVender, pagamento: telaPagamento, vendas: telaVendas, detalhe: telaDetalhe };
+  $("#app").innerHTML = (telas[T.tela] || telaInicio)();
+  T.msg = "";
+  const ep = $("#ep"); if (ep) { ep.focus(); ep.select(); }
+  const cn = $("#cn-nome"); if (cn) cn.focus();
+}
+
+// ---------------------------------------------------------------- eventos
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-a]"); if (!b || b.disabled) return;
+  const a = b.dataset.a, x = b.dataset.v;
+  if (a === "ir") ir(x);
+  else if (a === "olho") { S.cfg.esconder = !S.cfg.esconder; guardar(); desenhar(); }
+  else if (a === "cons") escolherConsumidor(x);
+  else if (a === "cnovo") { T.clienteNovo = !T.clienteNovo; T.erro = ""; desenhar(); }
+  else if (a === "ccriar") criarCliente();
+  else if (a === "add") adicionar(x);
+  else if (a === "mais") mudarQtd(x, 1);
+  else if (a === "menos") mudarQtd(x, -1);
+  else if (a === "preco") { T.editarPreco = x; desenhar(); }
+  else if (a === "pagar") { const er = T.v.itens.some((i) => !(i.preco > 0)) ? "Há produto sem preço: toque no preço para digitar." : ""; if (er) { T.erro = er; desenhar(); } else ir("pagamento"); }
+  else if (a === "forma") { T.v.forma = x; T.v.tocouForma = true; T.v.conta = ""; if (T.v.forma2 === x) T.v.forma2 = ""; T.erro = ""; desenhar(); }
+  else if (a === "forma2") { T.v.forma2 = x; T.v.conta2 = ""; T.erro = ""; desenhar(); }
+  else if (a === "fim") finalizar();
+  else if (a === "ver") { T.detalhe = x; ir("detalhe"); }
+  else if (a === "conf") { T.confirmar = x; desenhar(); }
+  else if (a === "desfazer" || a === "restaurar") { const v = S.vendas.find((y) => y.codigo === T.detalhe); if (v) { v.desfeita = a === "desfazer"; S.exportadoEm = ""; guardar(); } T.confirmar = ""; T.msg = a === "desfazer" ? "Venda desfeita." : "Venda restaurada."; desenhar(); }
+  else if (a === "copiar") { const v = S.vendas.find((y) => y.codigo === T.detalhe); if (v) copiar(recibo(v)); }
+  else if (a === "outra") { T.v = vendaNova(); ir("vender"); }
+  else if (a === "exp") exportar(x);
+  else if (a === "zerar") novaFeira();
+});
+document.addEventListener("input", (e) => {
+  const t = e.target;
+  if (t.id === "bc") { T.buscaC = t.value; $("#lc").innerHTML = listaConsumidores(); }
+  else if (t.id === "bp") { T.buscaP = t.value; $("#lp").innerHTML = listaProdutos(); }
+  else if (t.id === "valor2") { T.v.valor2 = t.value; $("#resumo").innerHTML = resumoDivisao(); $("#fiado").innerHTML = avisoSaldo(); }
+  else if (t.id === "obs") T.v.obs = t.value;
+  else if (t.id === "apelido") { S.cfg.apelido = t.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8); guardar(); }
+});
+document.addEventListener("change", (e) => {
+  const t = e.target;
+  if (t.id === "arq" && t.files && t.files[0]) carregarPacote(t.files[0]);
+  else if (t.id === "todos") { T.todos = t.checked; $("#lp").innerHTML = listaProdutos(); }
+  else if (t.id === "dividir") { T.v.dividir = t.checked; if (!t.checked) { T.v.forma2 = ""; T.v.valor2 = ""; } else if (!T.v.forma2) T.v.forma2 = FORMAS.filter((f) => f !== T.v.forma)[0]; desenhar(); }
+  else if (t.id === "entregar") T.v.entregar = t.checked;
+  else if (t.id === "contadia") { S.cfg.contaDia = t.value; guardar(); }
+  else if (t.id === "conta1") T.v.conta = t.value;
+  else if (t.id === "conta2") T.v.conta2 = t.value;
+  else if (t.id === "apelido") desenhar();
+  else if (t.id === "ep") aplicarPreco(t);
+});
+function aplicarPreco(t) {
+  const it = T.v.itens.find((i) => i.sku === t.dataset.sku), n = numDigitado(t.value);
+  if (it && n > 0) it.preco = r2(n);
+  T.editarPreco = null; T.erro = ""; desenhar();
+}
+document.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.id === "ep") { e.preventDefault(); aplicarPreco(e.target); } });
+document.addEventListener("focusout", (e) => { if (e.target.id === "ep" && T.editarPreco) aplicarPreco(e.target); });
+
+desenhar();
+if ("serviceWorker" in navigator) window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+</script>
+</body>
+</html>
