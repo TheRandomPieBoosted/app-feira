@@ -1,5 +1,5 @@
 // Guarda o app no aparelho para funcionar sem internet. Mude VERSAO a cada atualização do app.
-const VERSAO = "feira-app-1.0";
+const VERSAO = "feira-app-1.1";
 const ARQUIVOS = ["./", "index.html", "manifest.webmanifest", "icone-192.png", "icone-512.png", "icone-512-mascara.png"];
 
 self.addEventListener("install", (e) => {
