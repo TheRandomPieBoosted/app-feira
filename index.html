@@ -23,6 +23,9 @@ button{cursor:pointer}
 .capa small{color:#DCEBDD;font-size:13px;font-weight:500}
 .capa h1{margin:2px 0;font-size:26px;line-height:1.15}
 .capa p{margin:0;color:#DCEBDD;font-size:14px}
+.capa .linha{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.capa .olho{min-height:44px;min-width:64px;background:#3F7D47;border:0;color:#fff;font-weight:600;font-size:15px;padding:0 10px;border-radius:10px}
+.selo.aporte{background:#E3F0FA;color:#1F5C8A}
 .corpo{padding:14px;display:flex;flex-direction:column;gap:12px;flex:1}
 .cartao{background:#fff;border:1px solid #D5DED3;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
 .cartao h2{margin:0;font-size:15px;font-weight:600}
@@ -82,7 +85,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 /* App da feira – Rede Raízes da Mata. Funciona sem internet; tudo fica guardado neste aparelho.
    Ida: carrega o "pacote da feira" gerado pelo programa. Volta: exporta um arquivo de lançamento
    (formato versão 2 do GestaoRede) com os clientes novos e uma venda por venda. */
-const VERSAO = "1.1";
+const VERSAO = "1.2";
 const CHAVE = "feira-app-v1";
 const FORMAS = ["Dinheiro", "Pix", "Cartão", "Saldo"];
 
@@ -103,6 +106,7 @@ let S = ler();
 
 // ---------------------------------------------------------------- estado da tela (não guardado)
 function vendaNova() { return { consumidor: null, itens: [], forma: "Dinheiro", dividir: false, forma2: "", valor2: "", conta: "", conta2: "", entregar: false, obs: "" }; }
+function aporteNovo() { return { consumidor: null, itens: [], aporte: true, valorAporte: "", forma: "Pix", dividir: false, forma2: "", valor2: "", conta: "", conta2: "", entregar: false, obs: "" }; }
 let T = { tela: "inicio", v: vendaNova(), buscaC: "", buscaP: "", todos: false, detalhe: null, msg: "", erro: "", confirmar: "", editarPreco: null, clienteNovo: false, ultima: null };
 
 // ---------------------------------------------------------------- utilidades
@@ -182,7 +186,9 @@ function qrSvg(texto) {
 function pixDaConta(conta) { return (S.pacote && S.pacote.pix && S.pacote.pix[conta]) || ""; }
 // Parte da venda em aberto que é paga em Pix: {conta, valor} ou null.
 function partePix() {
-  const v = T.v, total = totalItens(v.itens), v2 = v.dividir ? numDigitado(v.valor2) : 0;
+  const v = T.v;
+  if (v.aporte) return v.forma === "Pix" ? { conta: v.conta || contaPadrao("Pix"), valor: r2(numDigitado(v.valorAporte)) } : null;
+  const total = totalItens(v.itens), v2 = v.dividir ? numDigitado(v.valor2) : 0;
   if (v.forma === "Pix") {
     if (v.dividir && !(v2 > 0 && v2 < total)) return null;
     return { conta: v.conta || contaPadrao("Pix"), valor: r2(total - v2) };
@@ -195,7 +201,7 @@ function blocoPix() {
   if (!(v.forma === "Pix" || (v.dividir && v.forma2 === "Pix"))) return "";
   const p = partePix();
   if (!p) return '<div class="sub">O QR do Pix aparece quando o valor da segunda forma estiver digitado.</div>';
-  if (!(p.valor > 0)) return "";
+  if (!(p.valor > 0)) return v.aporte ? '<div class="sub">O QR do Pix aparece quando o valor estiver digitado.</div>' : "";
   const cod = pixDaConta(p.conta);
   if (!cod) return '<div class="sub">' + esc(p.conta) + ' não tem QR do Pix no pacote. No computador: Configurações → Contas → QR do Pix, e gere o pacote de novo.</div>';
   const info = pixInfo(cod), pronto = pixComValor(cod, p.valor);
@@ -214,9 +220,13 @@ function partes(v) {
 }
 function parteSaldo(v) { return r2(partes(v).filter((p) => p.forma === "Saldo").reduce((s, p) => s + p.valor, 0)); }
 function pagamentoTexto(v) { const ps = partes(v); return ps.length > 1 ? ps.map((p) => p.forma + " " + brl(p.valor)).join(" + ") : ps[0].forma + (ps[0].conta ? " → " + ps[0].conta : ""); }
-function vendasValidas() { return S.vendas.filter((v) => !v.desfeita); }
+function ehAporte(v) { return v.tipo === "aporte"; }
+function vendasValidas() { return S.vendas.filter((v) => !v.desfeita && !ehAporte(v)); }
+function aportesValidos() { return S.vendas.filter((v) => !v.desfeita && ehAporte(v)); }
+function registrosValidos() { return S.vendas.filter((v) => !v.desfeita); }
+function aporteHoje(nome) { return r2(aportesValidos().filter((v) => v.consumidor === nome).reduce((s, v) => s + v.total, 0)); }
 function gastoHoje(nome) { return r2(vendasValidas().filter((v) => v.consumidor === nome).reduce((s, v) => s + parteSaldo(v), 0)); }
-function saldoAgora(c) { return r2(c.saldo - gastoHoje(c.nome)); }
+function saldoAgora(c) { return r2(c.saldo - gastoHoje(c.nome) + aporteHoje(c.nome)); }
 function quemDe(v) { return v.consumidor || "Venda avulsa"; }
 
 // ---------------------------------------------------------------- ações
@@ -235,7 +245,7 @@ function carregarPacote(arquivo) {
       S.novos = S.novos.filter((n) => !d.consumidores.some((c) => c.busca === chave(n.nome)));
       guardar();
       T.msg = "Pacote carregado: " + d.resumo.produtos + " produtos e " + d.resumo.consumidores + " consumidores."; T.erro = "";
-    } catch (e) { T.erro = "Este arquivo não é um pacote da feira. Gere o pacote no programa (Passar a feira a limpo → App do celular)."; }
+    } catch (e) { T.erro = "Este arquivo não é um pacote da feira. Gere o pacote no programa (Feiras → App do celular)."; }
     desenhar();
   };
   leitor.onerror = () => { T.erro = "Não consegui abrir o arquivo."; desenhar(); };
@@ -259,6 +269,7 @@ function mudarQtd(sku, d) {
 }
 function escolherConsumidor(nome) {
   T.v.consumidor = nome; T.buscaC = ""; T.clienteNovo = false; T.erro = "";
+  if (T.v.aporte) { desenhar(); return; }
   if (nome && T.v.forma === "Dinheiro" && !T.v.tocouForma) T.v.forma = "Saldo";
   if (!nome && T.v.forma === "Saldo") T.v.forma = "Dinheiro";
   desenhar();
@@ -307,7 +318,31 @@ function finalizar() {
   T.detalhe = reg.codigo; ir("detalhe");
 }
 
+function finalizarAporte() {
+  const v = T.v, val = r2(numDigitado(v.valorAporte));
+  if (!v.consumidor) { T.erro = "Escolha de quem é o aporte."; desenhar(); return; }
+  if (!(val > 0)) { T.erro = "Digite o valor recebido."; desenhar(); return; }
+  if (!S.cfg.apelido) { T.erro = "Dê um apelido a este celular na tela Início antes de receber."; desenhar(); return; }
+  const hoje = hojeISO();
+  S.seq += 1;
+  const reg = {
+    tipo: "aporte", codigo: S.cfg.apelido + "-" + hoje.replace(/-/g, "") + "-" + String(S.seq).padStart(3, "0"),
+    data: hoje, hora: horaAgora(), consumidor: v.consumidor, itens: [], total: val,
+    pagamento: v.forma, conta: v.conta || contaPadrao(v.forma), pagamento2: "", valor2: 0, conta2: "",
+    entregar_depois: false, obs: (v.obs || "").trim(), desfeita: false
+  };
+  S.vendas.push(reg); S.exportadoEm = ""; guardar();
+  T.v = vendaNova(); T.msg = "Aporte registrado: " + reg.consumidor + " · " + brl(val) + ".";
+  T.detalhe = reg.codigo; ir("detalhe");
+}
+
 function recibo(v) {
+  if (ehAporte(v)) {
+    const l = ["Rede Raízes da Mata · " + dataBR(v.data), "Para: " + v.consumidor, "", "Aporte recebido: " + brl(v.total) + " (" + v.pagamento + ")"];
+    const c = consumidor(v.consumidor);
+    if (c) l.push("Seu saldo: " + brl(saldoAgora(c)));
+    return l.join("\n");
+  }
   const l = ["Rede Raízes da Mata · " + dataBR(v.data)];
   if (v.consumidor) l.push("Para: " + v.consumidor);
   l.push("");
@@ -327,8 +362,8 @@ function copiar(texto) {
 
 function arquivoDeVolta() {
   const agora = new Date(), carimbo = hojeISO().replace(/-/g, "") + "-" + p2(agora.getHours()) + p2(agora.getMinutes()) + p2(agora.getSeconds());
-  const validas = vendasValidas();
-  const usados = new Set(validas.map((v) => v.consumidor).filter(Boolean));
+  const validas = vendasValidas(), aportes = aportesValidos();
+  const usados = new Set(registrosValidos().map((v) => v.consumidor).filter(Boolean));
   const ops = [];
   S.novos.filter((n) => usados.has(n.nome)).forEach((n) => ops.push({ tipo: "consumidor", nome: n.nome, contato: n.contato || "" }));
   validas.forEach((v) => {
@@ -341,9 +376,11 @@ function arquivoDeVolta() {
     op.obs = (v.obs ? v.obs + " · " : "") + "app " + S.cfg.apelido + " " + v.hora;
     ops.push(op);
   });
+  aportes.forEach((v) => ops.push({ tipo: "aporte", origem: "app", codigo: v.codigo, data: v.data, consumidor: v.consumidor,
+    valor: v.total, conta: v.conta, descricao: "Aporte na feira (" + v.pagamento + ")" + (v.obs ? " · " + v.obs : "") + " · app " + S.cfg.apelido + " " + v.hora }));
   const dados = { versao: 2, codigo: "APP-" + S.cfg.apelido + "-" + carimbo, origem: "app",
-    descricao: "Feira de " + dataBR(hojeISO()) + " · celular " + S.cfg.apelido + " · " + validas.length + " venda(s)", operacoes: ops };
-  return { nome: "feira-" + S.cfg.apelido + "-" + carimbo, texto: JSON.stringify(dados, null, 1), vendas: validas.length };
+    descricao: "Feira de " + dataBR(hojeISO()) + " · celular " + S.cfg.apelido + " · " + validas.length + " venda(s)" + (aportes.length ? " e " + aportes.length + " aporte(s)" : ""), operacoes: ops };
+  return { nome: "feira-" + S.cfg.apelido + "-" + carimbo, texto: JSON.stringify(dados, null, 1), vendas: validas.length + aportes.length };
 }
 function baixar(nome, texto) {
   const url = URL.createObjectURL(new Blob([texto], { type: "application/json" }));
@@ -353,13 +390,13 @@ function baixar(nome, texto) {
 function marcarExportado(como) { S.exportadoEm = horaAgora(); guardar(); T.msg = como; desenhar(); }
 function exportar(modo) {
   const arq = arquivoDeVolta();
-  if (!arq.vendas) { T.erro = "Ainda não há vendas para exportar."; desenhar(); return; }
+  if (!arq.vendas) { T.erro = "Ainda não há vendas nem aportes para exportar."; desenhar(); return; }
   if (modo === "compartilhar") {
     let f = null;
     try { f = new File([arq.texto], arq.nome + ".txt", { type: "text/plain" }); } catch (e) {}
     if (f && navigator.canShare && navigator.canShare({ files: [f] })) {
       navigator.share({ files: [f], title: "Feira " + S.cfg.apelido }).then(
-        () => marcarExportado("Arquivo enviado. No computador: Passar a feira a limpo → App do celular → Receber."),
+        () => marcarExportado("Arquivo enviado. No computador: Feiras → App do celular → Receber."),
         (e) => { if (e && e.name !== "AbortError") { baixar(arq.nome + ".json", arq.texto); marcarExportado("Não deu para compartilhar: o arquivo foi salvo na pasta Downloads. Anexe-o no WhatsApp."); } });
       return;
     }
@@ -390,17 +427,20 @@ function temQr() {
 }
 function telaInicio() {
   const p = S.pacote, validas = vendasValidas(), total = r2(validas.reduce((s, v) => s + v.total, 0));
-  let h = '<div class="capa"><small>Rede Raízes da Mata</small><h1>Feira</h1><p>' + dataBR(hojeISO()) + '</p></div><div class="corpo">' + avisos();
+  const aps = aportesValidos(), totalAp = r2(aps.reduce((s, v) => s + v.total, 0));
+  let h = '<div class="capa"><div class="linha"><div><small>Rede Raízes da Mata</small><h1>Feira</h1><p>' + dataBR(hojeISO()) + '</p></div>' +
+    '<button class="olho" data-a="olho" aria-label="' + (S.cfg.esconder ? "Mostrar valores" : "Esconder valores") + '">' + (S.cfg.esconder ? "ver valores" : "ocultar valores") + '</button></div></div><div class="corpo">' + avisos();
   h += '<div class="cartao"><div class="linha"><h2>' + (p ? "Pacote carregado" : "Nenhum pacote carregado") + '</h2>' + (p ? '<span class="selo' + (p.gerado_em.slice(0, 10) === hojeISO() ? '">de hoje' : ' alerta">de ' + dataBR(p.gerado_em.slice(0, 10))) + '</span>' : "") + '</div>';
   h += p ? '<div class="sub">Gerado em ' + dataBR(p.gerado_em.slice(0, 10)) + " às " + p.gerado_em.slice(11, 16) + "<br>" + p.resumo.produtos + " produtos (" + p.resumo.com_estoque + " com estoque) · " + p.resumo.consumidores + " consumidores</div>"
-         : '<div class="sub">No computador: Passar a feira a limpo → App do celular → Gerar pacote da feira. Mande o arquivo para este celular e carregue aqui.</div>';
+         : '<div class="sub">No computador: Feiras → App do celular → Gerar pacote da feira. Mande o arquivo para este celular e carregue aqui.</div>';
   h += '<label class="b" style="align-self:flex-start">' + (p ? "Carregar outro pacote" : "Carregar pacote") + '<input type="file" id="arq" accept=".json,.txt,application/json,text/plain" style="position:absolute;opacity:0;width:1px;height:1px"></label></div>';
   h += '<div class="cartao"><h2>Este celular</h2><label class="rot" for="apelido">Apelido (entra no código das vendas)</label><input class="campo" id="apelido" maxlength="8" placeholder="A34" value="' + esc(S.cfg.apelido) + '">';
   if (p) h += '<label class="rot" for="contadia">Conta do dia (Pix e cartão)</label><select class="campo" id="contadia">' + contas().map((c) => '<option' + (c === contaDoDia() ? " selected" : "") + '>' + esc(c) + '</option>').join("") + '</select><div class="sub" id="temqr">' + temQr() + '</div>';
   h += '</div>';
-  h += '<div class="cartao"><h2>Hoje neste celular</h2><div class="duas"><div><div class="sub">Vendas</div><div class="num">' + validas.length + '</div></div><div><div class="sub">Total</div><div class="num">' + brl(total) + '</div></div></div>' +
-       (validas.length ? '<div class="sub">' + (S.exportadoEm ? "Exportado às " + S.exportadoEm + "." : "Ainda não exportado.") + '</div>' : "") + '</div>';
+  h += '<div class="cartao"><h2>Hoje neste celular</h2><div class="duas"><div><div class="sub">Vendas</div><div class="num">' + validas.length + '</div></div><div><div class="sub">Total</div><div class="num">' + valor(total) + '</div></div></div>' + (aps.length ? '<div class="sub">Aportes recebidos: ' + aps.length + ' · ' + valor(totalAp) + '</div>' : "") +
+       (validas.length || aps.length ? '<div class="sub">' + (S.exportadoEm ? "Exportado às " + S.exportadoEm + "." : "Ainda não exportado.") + '</div>' : "") + '</div>';
   h += '<button class="b p g" data-a="ir" data-v="vender"' + (p ? "" : " disabled") + '>Nova venda</button>';
+  h += '<button class="b" data-a="aporte"' + (p ? "" : " disabled") + '>Receber valor (aporte)</button>';
   h += '<div class="duas"><button class="b" data-a="ir" data-v="vendas">Vendas da feira</button><button class="b" data-a="ir" data-v="vendas">Exportar</button></div>';
   h += '<div class="aviso">Tudo fica guardado neste celular a cada venda, mesmo sem internet. No fim da feira, exporte e mande o arquivo para o programa.</div>';
   h += '<div class="sub" style="text-align:center">App da feira ' + VERSAO + '</div></div>';
@@ -488,17 +528,38 @@ function avisoSaldo() {
   return fica < 0 ? '<div class="aviso">Fica com saldo de ' + valor(fica) + '. É fiado: a venda é gravada mesmo assim.</div>' : '<div class="sub">Depois da compra: saldo ' + valor(fica) + '.</div>';
 }
 
+function telaAporte() {
+  const v = T.v, c = v.consumidor ? consumidor(v.consumidor) : null, val = numDigitado(v.valorAporte);
+  const freq = consumidores().filter((x) => x.frequente).slice(0, 6);
+  let h = topo("Receber valor", "inicio", "Início", true) + '<div class="corpo">' + avisos();
+  h += '<div class="sub">Dinheiro que a pessoa deixa na conta dela, sem levar produto. Vira aporte no programa.</div>';
+  h += '<label class="rot" for="bc">De quem</label><input class="campo" id="bc" autocomplete="off" placeholder="Buscar pelo nome" value="' + esc(T.buscaC) + '"><div id="lc">' + listaConsumidores() + '</div>';
+  h += '<div class="chips">' + (c ? '<button class="chip on" data-a="cons" data-v="' + esc(c.nome) + '">' + esc(c.nome) + '</button>' : "") +
+       freq.filter((x) => !c || x.nome !== c.nome).map((x) => '<button class="chip" data-a="cons" data-v="' + esc(x.nome) + '">' + esc(x.nome) + '</button>').join("") +
+       '<button class="chip novo" data-a="cnovo">+ Cliente novo</button></div>';
+  if (T.clienteNovo) h += '<div class="cartao"><h2>Cliente novo</h2><label class="rot" for="cn-nome">Nome</label><input class="campo" id="cn-nome" autocomplete="off"><label class="rot" for="cn-tel">Telefone</label><input class="campo" id="cn-tel" type="tel" inputmode="tel" autocomplete="off"><div class="duas"><button class="b" data-a="cnovo">Cancelar</button><button class="b p" data-a="ccriar">Cadastrar</button></div></div>';
+  if (c) h += '<div class="sub">Saldo agora <b>' + valor(saldoAgora(c)) + '</b>' + (val > 0 ? ' · depois do aporte <b>' + valor(saldoAgora(c) + val) + '</b>' : "") + '</div>';
+  h += '<label class="rot" for="valap">Valor recebido (R$)</label><input class="campo" style="width:170px;font-size:20px" id="valap" inputmode="decimal" autocomplete="off" value="' + esc(v.valorAporte) + '">';
+  h += '<label class="rot">Forma</label>' + botoesForma(v.forma, "forma", "Saldo") + seletorConta("conta1", v.forma, v.conta);
+  h += '<div id="pix">' + blocoPix() + '</div>';
+  h += '<label class="rot" for="obs">Observação</label><input class="campo" id="obs" autocomplete="off" value="' + esc(v.obs) + '">';
+  h += '</div><div class="rodape"><button class="b p g" style="flex:1" data-a="fimap">Registrar aporte</button></div>';
+  return h;
+}
+
 function telaVendas() {
   const validas = vendasValidas(), total = r2(validas.reduce((s, v) => s + v.total, 0)), porForma = {};
+  const aps = aportesValidos(), totalAp = r2(aps.reduce((s, v) => s + v.total, 0));
   validas.forEach((v) => partes(v).forEach((p) => { porForma[p.forma] = r2((porForma[p.forma] || 0) + p.valor); }));
   let h = topo("Vendas da feira", "inicio", "Início", false) + '<div class="corpo">' + avisos();
   h += '<div class="cartao"><div class="linha"><span class="sub">' + validas.length + ' venda(s)</span><span class="num">' + brl(total) + '</span></div><div class="duas" style="gap:4px 16px">' +
-       FORMAS.map((f) => '<div class="linha" style="font-size:14px"><span class="sub">' + f + '</span><b>' + brl(porForma[f] || 0) + '</b></div>').join("") + '</div></div>';
-  if (!S.vendas.length) h += '<div class="sub">Nenhuma venda ainda.</div>';
-  else h += '<div class="cartao" style="gap:0">' + S.vendas.slice().reverse().map((v) => '<div class="venda' + (v.desfeita ? " riscada" : "") + '"><div style="min-width:0"><div class="quem">' + esc(quemDe(v)) + '</div><div class="sub">' + v.hora + " · " + (v.desfeita ? "desfeita (não vai para o programa)" : esc(pagamentoTexto(v))) + '</div></div><div class="linha"><b class="val">' + brl(v.total) + '</b><button class="b" style="min-height:44px;padding:0 10px;font-size:13px" data-a="ver" data-v="' + esc(v.codigo) + '">Ver ›</button></div></div>').join("") + '</div>';
-  h += '<button class="b p g" data-a="exp" data-v="compartilhar"' + (validas.length ? "" : " disabled") + '>Exportar e mandar para o programa</button>';
-  h += '<button class="b" data-a="exp" data-v="baixar"' + (validas.length ? "" : " disabled") + '>Salvar uma cópia neste celular</button>';
-  h += '<div class="sub" style="text-align:center">' + (S.exportadoEm ? "Exportado às " + S.exportadoEm + ". " : "") + 'Pode exportar mais de uma vez: o programa não repete venda.</div>';
+       FORMAS.map((f) => '<div class="linha" style="font-size:14px"><span class="sub">' + f + '</span><b>' + brl(porForma[f] || 0) + '</b></div>').join("") + '</div>' +
+       (aps.length ? '<div class="linha" style="border-top:1px solid #E6ECE4;padding-top:8px"><span class="sub">' + aps.length + ' aporte(s) recebido(s)</span><b>' + brl(totalAp) + '</b></div>' : "") + '</div>';
+  if (!S.vendas.length) h += '<div class="sub">Nenhuma venda nem aporte ainda.</div>';
+  else h += '<div class="cartao" style="gap:0">' + S.vendas.slice().reverse().map((v) => '<div class="venda' + (v.desfeita ? " riscada" : "") + '"><div style="min-width:0"><div class="quem">' + esc(quemDe(v)) + (ehAporte(v) ? ' <span class="selo aporte">aporte</span>' : "") + '</div><div class="sub">' + v.hora + " · " + (v.desfeita ? "desfeito (não vai para o programa)" : esc(pagamentoTexto(v))) + '</div></div><div class="linha"><b class="val">' + brl(v.total) + '</b><button class="b" style="min-height:44px;padding:0 10px;font-size:13px" data-a="ver" data-v="' + esc(v.codigo) + '">Ver ›</button></div></div>').join("") + '</div>';
+  h += '<button class="b p g" data-a="exp" data-v="compartilhar"' + (validas.length || aps.length ? "" : " disabled") + '>Exportar e mandar para o programa</button>';
+  h += '<button class="b" data-a="exp" data-v="baixar"' + (validas.length || aps.length ? "" : " disabled") + '>Salvar uma cópia neste celular</button>';
+  h += '<div class="sub" style="text-align:center">' + (S.exportadoEm ? "Exportado às " + S.exportadoEm + ". " : "") + 'Pode exportar mais de uma vez: o programa não repete venda nem aporte.</div>';
   if (S.vendas.length) {
     h += T.confirmar === "zerar"
       ? '<div class="cartao"><div><b>Apagar todas as vendas deste celular?</b></div><div class="sub">' + (S.exportadoEm ? "Faça isso só depois de aplicar o arquivo no programa." : "Atenção: as vendas ainda NÃO foram exportadas e serão perdidas.") + '</div><div class="duas"><button class="b" data-a="conf" data-v="">Cancelar</button><button class="b perigo" data-a="zerar">Apagar e começar nova feira</button></div></div>'
@@ -512,6 +573,7 @@ function telaDetalhe() {
   const v = S.vendas.find((x) => x.codigo === T.detalhe);
   if (!v) return topo("Venda", "vendas", "Vendas", false) + '<div class="corpo"><div class="sub">Venda não encontrada.</div></div>';
   const c = v.consumidor ? consumidor(v.consumidor) : null, ps = partes(v);
+  if (ehAporte(v)) return telaDetalheAporte(v, c);
   let h = topo("Venda das " + v.hora, "vendas", "Vendas", !!c) + '<div class="corpo">' + avisos();
   if (v.desfeita) h += '<div class="aviso">Esta venda foi desfeita e não vai para o programa.</div>';
   h += '<div class="cartao"><div class="linha"><h2 style="font-size:17px">' + esc(quemDe(v)) + '</h2><span class="sub">' + esc(v.codigo) + '</span></div>' +
@@ -520,7 +582,7 @@ function telaDetalhe() {
     ps.map((p) => '<div class="linha sub"><span>' + p.forma + (p.conta ? " → " + esc(p.conta) : "") + '</span><b>' + brl(p.valor) + '</b></div>').join("") +
     (v.entregar_depois ? '<div class="sub">Encomenda: entregar depois.</div>' : "") + (v.obs ? '<div class="sub">Observação: ' + esc(v.obs) + '</div>' : "") + '</div>';
   if (c) {
-    const outras = S.vendas.filter((x) => x.consumidor === v.consumidor && x.codigo !== v.codigo && !x.desfeita);
+    const outras = S.vendas.filter((x) => x.consumidor === v.consumidor && x.codigo !== v.codigo && !x.desfeita && !ehAporte(x));
     h += '<div class="cartao"><h2>' + esc(c.nome) + '</h2><div class="sub">Saldo no pacote ' + valor(c.saldo) + ' · depois das compras de hoje ' + valor(saldoAgora(c)) + '</div>';
     if (outras.length) h += '<div class="sub"><b>Outras compras nesta feira</b></div>' + outras.map((x) => '<div class="linha" style="font-size:14px"><span>' + x.hora + " · " + esc(x.itens.map((i) => qtd(i.quantidade) + " × " + i.nome).join(", ")) + '</span><b>' + brl(x.total) + '</b></div>').join("");
     const ant = c.compras || [];
@@ -537,8 +599,26 @@ function telaDetalhe() {
   return h;
 }
 
+function telaDetalheAporte(v, c) {
+  let h = topo("Aporte das " + v.hora, "vendas", "Vendas", true) + '<div class="corpo">' + avisos();
+  if (v.desfeita) h += '<div class="aviso">Este aporte foi desfeito e não vai para o programa.</div>';
+  h += '<div class="cartao"><div class="linha"><h2 style="font-size:17px">' + esc(v.consumidor) + '</h2><span class="sub">' + esc(v.codigo) + '</span></div>' +
+    '<div class="linha" style="font-size:18px"><b>Aporte</b><b>' + brl(v.total) + '</b></div>' +
+    '<div class="linha sub"><span>' + v.pagamento + (v.conta ? " → " + esc(v.conta) : "") + '</span></div>' +
+    (v.obs ? '<div class="sub">Observação: ' + esc(v.obs) + '</div>' : "") +
+    (c ? '<div class="sub">Saldo no pacote ' + valor(c.saldo) + ' · agora ' + valor(saldoAgora(c)) + '</div>' : "") + '</div>';
+  h += '<pre class="recibo" id="recibo">' + esc(recibo(v)) + '</pre>';
+  h += '<button class="b" data-a="copiar">Copiar recibo para o WhatsApp</button>';
+  if (v.desfeita) h += '<button class="b" data-a="restaurar">Restaurar este aporte</button>';
+  else h += T.confirmar === "desfazer"
+    ? '<div class="cartao"><div><b>Desfazer este aporte?</b></div><div class="sub">Ele fica riscado na lista e não vai para o programa. Dá para restaurar depois.</div><div class="duas"><button class="b" data-a="conf" data-v="">Não</button><button class="b perigo" data-a="desfazer">Sim, desfazer</button></div></div>'
+    : '<button class="b perigo" data-a="conf" data-v="desfazer">Desfazer este aporte…</button>';
+  h += '<button class="b p g" data-a="aporte">Outro aporte</button></div>';
+  return h;
+}
+
 function desenhar() {
-  const telas = { inicio: telaInicio, vender: telaVender, pagamento: telaPagamento, vendas: telaVendas, detalhe: telaDetalhe };
+  const telas = { inicio: telaInicio, vender: telaVender, pagamento: telaPagamento, vendas: telaVendas, detalhe: telaDetalhe, aporte: telaAporte };
   $("#app").innerHTML = (telas[T.tela] || telaInicio)();
   T.msg = "";
   const ep = $("#ep"); if (ep) { ep.focus(); ep.select(); }
@@ -562,9 +642,11 @@ document.addEventListener("click", (e) => {
   else if (a === "forma") { T.v.forma = x; T.v.tocouForma = true; T.v.conta = ""; if (T.v.forma2 === x) T.v.forma2 = ""; T.erro = ""; desenhar(); }
   else if (a === "forma2") { T.v.forma2 = x; T.v.conta2 = ""; T.erro = ""; desenhar(); }
   else if (a === "fim") finalizar();
+  else if (a === "fimap") finalizarAporte();
+  else if (a === "aporte") { T.v = aporteNovo(); T.buscaC = ""; ir("aporte"); }
   else if (a === "ver") { T.detalhe = x; ir("detalhe"); }
   else if (a === "conf") { T.confirmar = x; desenhar(); }
-  else if (a === "desfazer" || a === "restaurar") { const v = S.vendas.find((y) => y.codigo === T.detalhe); if (v) { v.desfeita = a === "desfazer"; S.exportadoEm = ""; guardar(); } T.confirmar = ""; T.msg = a === "desfazer" ? "Venda desfeita." : "Venda restaurada."; desenhar(); }
+  else if (a === "desfazer" || a === "restaurar") { const v = S.vendas.find((y) => y.codigo === T.detalhe); if (v) { v.desfeita = a === "desfazer"; S.exportadoEm = ""; guardar(); } T.confirmar = ""; T.msg = v && ehAporte(v) ? (a === "desfazer" ? "Aporte desfeito." : "Aporte restaurado.") : (a === "desfazer" ? "Venda desfeita." : "Venda restaurada."); desenhar(); }
   else if (a === "copiar") { const v = S.vendas.find((y) => y.codigo === T.detalhe); if (v) copiar(recibo(v)); }
   else if (a === "outra") { T.v = vendaNova(); ir("vender"); }
   else if (a === "exp") exportar(x);
@@ -576,6 +658,7 @@ document.addEventListener("input", (e) => {
   else if (t.id === "bp") { T.buscaP = t.value; $("#lp").innerHTML = listaProdutos(); }
   else if (t.id === "valor2") { T.v.valor2 = t.value; $("#resumo").innerHTML = resumoDivisao(); $("#fiado").innerHTML = avisoSaldo(); $("#pix").innerHTML = blocoPix(); }
   else if (t.id === "obs") T.v.obs = t.value;
+  else if (t.id === "valap") { T.v.valorAporte = t.value; $("#pix").innerHTML = blocoPix(); }
   else if (t.id === "apelido") { S.cfg.apelido = t.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8); guardar(); }
 });
 document.addEventListener("change", (e) => {
