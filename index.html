@@ -88,7 +88,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 /* App da feira – Rede Raízes da Mata. Funciona sem internet; tudo fica guardado neste aparelho.
    Ida: carrega o "pacote da feira" gerado pelo programa. Volta: exporta um arquivo de lançamento
    (formato versão 2 do GestaoRede) com os clientes novos e uma venda por venda. */
-const VERSAO = "1.3";
+const VERSAO = "1.3.1";
 const CHAVE = "feira-app-v1";
 const FORMAS = ["Dinheiro", "Pix", "Cartão", "Saldo"];
 
@@ -274,7 +274,7 @@ function carregarPacote(arquivo) {
       // clientes novos que já entraram no programa deixam de ser "novos"
       S.novos = S.novos.filter((n) => !d.consumidores.some((c) => c.busca === chave(n.nome)));
       guardar();
-      T.msg = "Pacote carregado: " + d.resumo.produtos + " produtos e " + d.resumo.consumidores + " consumidores."; T.erro = "";
+      T.msg = "Pacote carregado: " + d.resumo.produtos + " produtos e " + d.resumo.consumidores + " consumidores" + (d.resumo.encomendas ? " e " + d.resumo.encomendas + " encomenda(s)" : "") + "."; T.erro = "";
     } catch (e) { T.erro = "Este arquivo não é um pacote da feira. Gere o pacote no programa (Feiras → App do celular)."; }
     desenhar();
   };
@@ -341,7 +341,7 @@ function finalizar(comoEncomenda) {
   const v = T.v;
   if (v.cobrando) return cobrar();
   if (comoEncomenda) {
-    if (!v.consumidor) { T.erro = "Para guardar como encomenda, escolha quem compra."; desenhar(); return; }
+    if (!v.consumidor) { T.erro = "Para fazer uma encomenda, escolha quem compra."; desenhar(); return; }
     if (!v.itens.length) { T.erro = "Escolha pelo menos um produto."; desenhar(); return; }
     if (v.itens.some((i) => !(i.preco > 0))) { T.erro = "Há produto sem preço: toque no preço para digitar."; desenhar(); return; }
   } else {
@@ -506,12 +506,12 @@ function exportar(modo) {
     try { f = new File([arq.texto], arq.nome + ".txt", { type: "text/plain" }); } catch (e) {}
     if (f && navigator.canShare && navigator.canShare({ files: [f] })) {
       navigator.share({ files: [f], title: "Feira " + S.cfg.apelido }).then(
-        () => marcarExportado("Arquivo enviado. No computador: Feiras → App do celular → Receber."),
-        (e) => { if (e && e.name !== "AbortError") { baixar(arq.nome + ".json", arq.texto); marcarExportado("Não deu para compartilhar: o arquivo foi salvo na pasta Downloads. Anexe-o no WhatsApp."); } });
+        () => marcarExportado("Arquivo enviado. No computador: Feiras → App do celular (se mandou para o Drive, ele aparece sozinho na lista da pasta Volta)."),
+        (e) => { if (e && e.name !== "AbortError") { baixar(arq.nome + ".json", arq.texto); marcarExportado("Não deu para compartilhar: o arquivo foi salvo na pasta Downloads. Mande pelo Drive (pasta Volta) ou pelo WhatsApp."); } });
       return;
     }
     baixar(arq.nome + ".json", arq.texto);
-    marcarExportado("Este navegador não compartilha arquivos: salvei em Downloads (" + arq.nome + ".json). Anexe-o no WhatsApp.");
+    marcarExportado("Este navegador não compartilha arquivos: salvei em Downloads (" + arq.nome + ".json). Mande pelo Drive (pasta Volta) ou pelo WhatsApp.");
     return;
   }
   baixar(arq.nome + ".json", arq.texto);
@@ -542,7 +542,7 @@ function telaInicio() {
     '<button class="olho" data-a="olho" aria-label="' + (S.cfg.esconder ? "Mostrar valores" : "Esconder valores") + '">' + (S.cfg.esconder ? "ver valores" : "ocultar valores") + '</button></div></div><div class="corpo">' + avisos();
   h += '<div class="cartao"><div class="linha"><h2>' + (p ? "Pacote carregado" : "Nenhum pacote carregado") + '</h2>' + (p ? '<span class="selo' + (p.gerado_em.slice(0, 10) === hojeISO() ? '">de hoje' : ' alerta">de ' + dataBR(p.gerado_em.slice(0, 10))) + '</span>' : "") + '</div>';
   h += p ? '<div class="sub">Gerado em ' + dataBR(p.gerado_em.slice(0, 10)) + " às " + p.gerado_em.slice(11, 16) + "<br>" + p.resumo.produtos + " produtos (" + p.resumo.com_estoque + " com estoque) · " + p.resumo.consumidores + " consumidores</div>"
-         : '<div class="sub">No computador: Feiras → App do celular → Gerar pacote da feira. Mande o arquivo para este celular e carregue aqui.</div>';
+         : '<div class="sub">No computador: Feiras → App do celular → Gerar pacote da feira. Depois toque aqui embaixo e escolha o pacote (no Drive, pasta Ida, ou onde você salvou).</div>';
   h += '<label class="b" style="align-self:flex-start">' + (p ? "Carregar outro pacote" : "Carregar pacote") + '<input type="file" id="arq" accept=".json,.txt,application/json,text/plain" style="position:absolute;opacity:0;width:1px;height:1px"></label></div>';
   h += '<div class="cartao"><h2>Este celular</h2><label class="rot" for="apelido">Apelido (entra no código das vendas)</label><input class="campo" id="apelido" maxlength="8" placeholder="A34" value="' + esc(S.cfg.apelido) + '">';
   if (p) h += '<label class="rot" for="contadia">Conta do dia (Pix e cartão)</label><select class="campo" id="contadia">' + contas().map((c) => '<option' + (c === contaDoDia() ? " selected" : "") + '>' + esc(c) + '</option>').join("") + '</select><div class="sub" id="temqr">' + temQr() + '</div>';
@@ -550,11 +550,11 @@ function telaInicio() {
   h += '<div class="cartao"><h2>Hoje neste celular</h2><div class="duas"><div><div class="sub">Vendas</div><div class="num">' + validas.length + '</div></div><div><div class="sub">Total</div><div class="num">' + valor(total) + '</div></div></div>' + (aps.length ? '<div class="sub">Aportes recebidos: ' + aps.length + ' · ' + valor(totalAp) + '</div>' : "") +
        (validas.length || aps.length ? '<div class="sub">' + (S.exportadoEm ? "Exportado às " + S.exportadoEm + "." : "Ainda não exportado.") + '</div>' : "") + '</div>';
   const enc = encomendasEmCurso();
-  if (enc.length) h += '<button class="cartao enc" style="text-align:left;cursor:pointer" data-a="ir" data-v="vendas"><div class="linha"><h2>Encomendas em curso</h2><span class="selo enc">' + enc.length + '</span></div><div class="sub">' + esc(enc.slice(0, 4).map((e) => e.consumidor).join(", ")) + (enc.length > 4 ? "…" : "") + ' · toque para cobrar ou editar</div></button>';
+  if (enc.length) h += '<button class="cartao enc" style="text-align:left;cursor:pointer" data-a="ir" data-v="vendas"><div class="linha"><h2>Encomendas</h2><span class="selo enc">' + enc.length + '</span></div><div class="sub">' + esc(enc.slice(0, 4).map((e) => e.consumidor).join(", ")) + (enc.length > 4 ? "…" : "") + ' · toque para cobrar ou editar</div></button>';
   h += '<button class="b p g" data-a="ir" data-v="vender"' + (p ? "" : " disabled") + '>Nova venda</button>';
   h += '<button class="b" data-a="aporte"' + (p ? "" : " disabled") + '>Receber valor (aporte)</button>';
   h += '<div class="duas"><button class="b" data-a="ir" data-v="vendas">Vendas da feira</button><button class="b" data-a="ir" data-v="vendas">Exportar</button></div>';
-  h += '<div class="aviso">Tudo fica guardado neste celular a cada venda, mesmo sem internet. No fim da feira, exporte e mande o arquivo para o programa.</div>';
+  h += '<div class="aviso">Tudo fica guardado neste celular a cada venda, mesmo sem internet. No fim da feira, exporte e mande o arquivo para o programa (pelo Drive, pasta Volta, ou pelo WhatsApp).</div>';
   h += '<div class="sub" style="text-align:center">App da feira ' + VERSAO + '</div></div>';
   return h;
 }
@@ -594,7 +594,7 @@ function telaVender() {
         : '<button class="preco" data-a="preco" data-v="' + esc(i.sku) + '" aria-label="Mudar o preço">' + brl(i.quantidade * i.preco) + '</button>') + '</div>').join("") +
       '</div><div class="sub">Toque no valor para mudar o preço de cada um.</div>';
   }
-  if (v.itens.length && (!v.editando || v.editandoEncomenda)) h += '<button class="b" data-a="fimenc"' + (v.consumidor ? "" : " disabled") + '>' + (v.editandoEncomenda ? "Salvar encomenda (cobrar depois)" : "Guardar como encomenda (cobrar depois)") + '</button>' + (v.consumidor ? "" : '<div class="sub">Para guardar como encomenda, escolha quem compra.</div>');
+  if (v.itens.length && (!v.editando || v.editandoEncomenda)) h += '<button class="b" data-a="fimenc"' + (v.consumidor ? "" : " disabled") + '>' + (v.editandoEncomenda ? "Salvar encomenda" : "Encomenda") + '</button>' + (v.consumidor ? '<div class="sub">Encomenda guarda a venda sem cobrar. Cobre depois, na lista de vendas.</div>' : '<div class="sub">Para fazer uma encomenda, escolha quem compra.</div>');
   h += '</div><div class="rodape"><div><div class="sub">Total · ' + v.itens.length + ' produto(s)</div><div class="num">' + brl(total) + '</div></div><button class="b p g" data-a="pagar"' + (v.itens.length ? "" : " disabled") + '>' + (v.editandoEncomenda ? "Cobrar agora ›" : "Pagamento ›") + '</button></div>';
   return h;
 }
@@ -671,9 +671,9 @@ function telaVendas() {
        (aps.length ? '<div class="linha" style="border-top:1px solid #E6ECE4;padding-top:8px"><span class="sub">' + aps.length + ' aporte(s) recebido(s)</span><b>' + brl(totalAp) + '</b></div>' : "") + '</div>';
   const enc = encomendasEmCurso();
   if (enc.length) {
-    h += '<div class="rot">Em curso (a cobrar) · ' + enc.length + '</div>';
+    h += '<div class="rot">Encomendas · ' + enc.length + '</div>';
     h += enc.map((e) => '<button class="cartao enc" style="text-align:left;cursor:pointer" data-a="ver" data-v="' + esc(e.codigo) + '"><div class="linha"><b>' + esc(e.consumidor) + ' <span class="selo enc">encomenda</span></b><b>' + brl(e.total) + '</b></div><div class="sub">' + (e.fromPacote ? "do programa" : "deste celular") + " · " + e.itens.length + " item(ns) · " + esc(e.itens.slice(0, 3).map((i) => i.nome).join(", ")) + (e.itens.length > 3 ? "…" : "") + '</div></button>').join("");
-    h += '<div class="rot">Concluídas</div>';
+    h += '<div class="rot">Vendas e aportes</div>';
   }
   const lista = S.vendas.filter((v) => !emCurso(v));
   const situacao = (v) => v.substituidaPor ? "editada → " + esc(v.substituidaPor) : v.desfeita ? "desfeita" + (v.exportado || v.fromPacote ? " (o programa desfaz)" : " (não vai para o programa)") : esc(pagamentoTexto(v));
@@ -701,7 +701,7 @@ function telaDetalhe() {
   if (v.substituidaPor) h += '<div class="aviso">Esta ' + (ehEncomenda(v) ? "encomenda" : "venda") + ' foi editada: a que vale é a ' + esc(v.substituidaPor) + '. <button class="b" style="min-height:40px;margin-top:6px;width:100%" data-a="ver" data-v="' + esc(v.substituidaPor) + '">Ver a nova</button></div>';
   else if (v.desfeita) h += '<div class="aviso">' + (v.exportado || v.fromPacote ? "Desfeita: na próxima exportação o programa desfaz esta venda." : "Esta venda foi desfeita e não vai para o programa.") + '</div>';
   if (v.edicaoDe) h += '<div class="sub">Edição da ' + esc(v.edicaoDe) + '.</div>';
-  if (curso) h += '<div class="editando">Encomenda em curso' + (v.fromPacote ? " (montada no programa)" : "") + ': ainda não foi cobrada. Dá para editar à vontade.</div>';
+  if (curso) h += '<div class="editando">Encomenda' + (v.fromPacote ? " montada no programa" : "") + ': ainda não foi cobrada. Dá para editar à vontade.</div>';
   h += '<div class="cartao"><div class="linha"><h2 style="font-size:17px">' + esc(quemDe(v)) + '</h2><span class="sub">' + esc(v.codigo) + '</span></div>' +
     v.itens.map((i) => '<div class="linha" style="font-size:15px"><span>' + qtd(i.quantidade) + " × " + esc(i.nome) + '</span><b>' + brl(i.quantidade * i.preco) + '</b></div>').join("") +
     '<div class="linha" style="font-size:18px;border-top:1px solid #E6ECE4;padding-top:8px"><b>Total</b><b>' + brl(v.total) + '</b></div>' +
