@@ -88,7 +88,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 /* App da feira – Rede Raízes da Mata. Funciona sem internet; tudo fica guardado neste aparelho.
    Ida: carrega o "pacote da feira" gerado pelo programa. Volta: exporta um arquivo de lançamento
    (formato versão 2 do GestaoRede) com os clientes novos e uma venda por venda. */
-const VERSAO = "1.3.1";
+const VERSAO = "1.3.2";
 const CHAVE = "feira-app-v1";
 const FORMAS = ["Dinheiro", "Pix", "Cartão", "Saldo"];
 
@@ -552,7 +552,7 @@ function telaInicio() {
   const enc = encomendasEmCurso();
   if (enc.length) h += '<button class="cartao enc" style="text-align:left;cursor:pointer" data-a="ir" data-v="vendas"><div class="linha"><h2>Encomendas</h2><span class="selo enc">' + enc.length + '</span></div><div class="sub">' + esc(enc.slice(0, 4).map((e) => e.consumidor).join(", ")) + (enc.length > 4 ? "…" : "") + ' · toque para cobrar ou editar</div></button>';
   h += '<button class="b p g" data-a="ir" data-v="vender"' + (p ? "" : " disabled") + '>Nova venda</button>';
-  h += '<button class="b" data-a="aporte"' + (p ? "" : " disabled") + '>Receber valor (aporte)</button>';
+  h += '<button class="b" data-a="aporte"' + (p ? "" : " disabled") + '>Aporte</button>';
   h += '<div class="duas"><button class="b" data-a="ir" data-v="vendas">Vendas da feira</button><button class="b" data-a="ir" data-v="vendas">Exportar</button></div>';
   h += '<div class="aviso">Tudo fica guardado neste celular a cada venda, mesmo sem internet. No fim da feira, exporte e mande o arquivo para o programa (pelo Drive, pasta Volta, ou pelo WhatsApp).</div>';
   h += '<div class="sub" style="text-align:center">App da feira ' + VERSAO + '</div></div>';
@@ -645,7 +645,7 @@ function avisoSaldo() {
 function telaAporte() {
   const v = T.v, c = v.consumidor ? consumidor(v.consumidor) : null, val = numDigitado(v.valorAporte);
   const freq = consumidores().filter((x) => x.frequente).slice(0, 6);
-  let h = topo("Receber valor", "inicio", "Início", true) + '<div class="corpo">' + avisos();
+  let h = topo("Aporte", "inicio", "Início", true) + '<div class="corpo">' + avisos();
   h += '<div class="sub">Dinheiro que a pessoa deixa na conta dela, sem levar produto. Vira aporte no programa.</div>';
   h += '<label class="rot" for="bc">De quem</label><input class="campo" id="bc" autocomplete="off" placeholder="Buscar pelo nome" value="' + esc(T.buscaC) + '"><div id="lc">' + listaConsumidores() + '</div>';
   h += '<div class="chips">' + (c ? '<button class="chip on" data-a="cons" data-v="' + esc(c.nome) + '">' + esc(c.nome) + '</button>' : "") +
